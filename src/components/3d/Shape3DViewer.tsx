@@ -29,11 +29,19 @@ export const Shape3DViewer: React.FC<Shape3DViewerProps> = ({ onShapeExplored })
   const [currentShape, setCurrentShape] = useState<ShapeType>('rectangular_prism');
   
   // Dimensions
-  const [width, setWidth] = useState<number>(4);
-  const [length, setLength] = useState<number>(6);
+  const [width, setWidth] = useState<number>(6);
+  const [length, setLength] = useState<number>(4);
   const [height, setHeight] = useState<number>(5);
   const [radius, setRadius] = useState<number>(3);
   const [innerRadius, setInnerRadius] = useState<number>(1.8);
+
+  // Triangular Prism Options
+  const [triangleType, setTriangleType] = useState<'general' | 'equilateral'>('general');
+
+  // Trapezoidal Prism specific dimensions: a (top parallel side), b (bottom parallel side), h_ฐาน (trapezoid height)
+  const [trapTop, setTrapTop] = useState<number>(3);
+  const [trapBottom, setTrapBottom] = useState<number>(6);
+  const [trapHeight, setTrapHeight] = useState<number>(4);
 
   // Cross-section controls
   const [enableSlice, setEnableSlice] = useState<boolean>(true);
@@ -64,6 +72,16 @@ export const Shape3DViewer: React.FC<Shape3DViewerProps> = ({ onShapeExplored })
     let crossSectionFormula = '';
     let crossSectionArea = 0;
 
+    let baseAreaFormula = '';
+    let baseAreaSubstitution = '';
+    let lateralAreaFormula = '';
+    let lateralAreaSubstitution = '';
+    let totalSurfaceFormula = '';
+    let totalSurfaceSubstitution = '';
+    let volumeFormula = '';
+    let volumeSubstitution = '';
+    let baseSummaryText = '';
+
     switch (currentShape) {
       case 'rectangular_prism': {
         baseArea = width * length;
@@ -71,6 +89,16 @@ export const Shape3DViewer: React.FC<Shape3DViewerProps> = ({ onShapeExplored })
         lateralArea = perimeter * height;
         totalSurfaceArea = 2 * baseArea + lateralArea;
         volume = baseArea * height;
+
+        baseAreaFormula = 'กว้าง × ยาว';
+        baseAreaSubstitution = `${width} × ${length} = ${baseArea.toFixed(2)}`;
+        lateralAreaFormula = 'ความยาวรอบฐาน × h';
+        lateralAreaSubstitution = `2(${width} + ${length}) × ${height} = ${perimeter} × ${height} = ${lateralArea.toFixed(2)}`;
+        totalSurfaceFormula = '2(พื้นที่ฐาน) + ผิวข้าง';
+        totalSurfaceSubstitution = `2(${baseArea.toFixed(2)}) + ${lateralArea.toFixed(2)} = ${totalSurfaceArea.toFixed(2)}`;
+        volumeFormula = 'พื้นที่ฐาน × สูง';
+        volumeSubstitution = `${baseArea.toFixed(2)} × ${height} = ${volume.toFixed(2)}`;
+        baseSummaryText = `ฐานสี่เหลี่ยมผืนผ้า: กว้าง ${width} หน่วย, ยาว ${length} หน่วย, สูงของปริซึม ${height} หน่วย`;
 
         if (sliceType === 'horizontal') {
           crossSectionName = 'สี่เหลี่ยมผืนผ้า (ขนานกับฐาน)';
@@ -88,39 +116,97 @@ export const Shape3DViewer: React.FC<Shape3DViewerProps> = ({ onShapeExplored })
         break;
       }
       case 'triangular_prism': {
-        // Equilateral triangle base
-        const s = width;
-        baseArea = (Math.sqrt(3) / 4) * s * s;
-        perimeter = 3 * s;
-        lateralArea = perimeter * height;
-        totalSurfaceArea = 2 * baseArea + lateralArea;
-        volume = baseArea * height;
+        if (triangleType === 'equilateral') {
+          // Equilateral triangle: (√3 / 4) × ด้าน²
+          const s = width;
+          baseArea = (Math.sqrt(3) / 4) * s * s;
+          perimeter = 3 * s;
+          lateralArea = perimeter * height;
+          totalSurfaceArea = 2 * baseArea + lateralArea;
+          volume = baseArea * height;
 
-        if (sliceType === 'horizontal') {
-          crossSectionName = 'สามเหลี่ยมด้านเท่า (เท่ากับฐานทุกประการ)';
-          crossSectionFormula = '(√3 / 4) × ด้าน²';
-          crossSectionArea = baseArea;
-        } else if (sliceType === 'vertical') {
-          crossSectionName = 'สี่เหลี่ยมผืนผ้า (ตั้งฉากกับฐาน)';
-          crossSectionFormula = 'ด้านตัด × สูง';
-          crossSectionArea = s * height;
+          baseAreaFormula = '(√3 / 4) × ด้าน²';
+          baseAreaSubstitution = `(√3 / 4) × ${s}² ≈ (1.732 / 4) × ${(s * s).toFixed(1)} = ${baseArea.toFixed(2)}`;
+          lateralAreaFormula = 'ความยาวรอบฐาน × สูงของปริซึม';
+          lateralAreaSubstitution = `(3 × ${s}) × ${height} = ${perimeter} × ${height} = ${lateralArea.toFixed(2)}`;
+          totalSurfaceFormula = '2(พื้นที่ฐาน) + ผิวข้าง';
+          totalSurfaceSubstitution = `2(${baseArea.toFixed(2)}) + ${lateralArea.toFixed(2)} = ${totalSurfaceArea.toFixed(2)}`;
+          volumeFormula = 'พื้นที่ฐาน × สูงของปริซึม';
+          volumeSubstitution = `${baseArea.toFixed(2)} × ${height} = ${volume.toFixed(2)}`;
+          baseSummaryText = `ฐานสามเหลี่ยมด้านเท่า: ด้านยาวด้านละ ${s} หน่วย, สูงของปริซึม ${height} หน่วย`;
+
+          if (sliceType === 'horizontal') {
+            crossSectionName = 'สามเหลี่ยมด้านเท่า (เท่ากับฐานทุกประการ)';
+            crossSectionFormula = '(√3 / 4) × ด้าน²';
+            crossSectionArea = baseArea;
+          } else if (sliceType === 'vertical') {
+            crossSectionName = 'สี่เหลี่ยมผืนผ้า (ตั้งฉากกับฐาน)';
+            crossSectionFormula = 'ด้านตัด × สูง';
+            crossSectionArea = s * height;
+          } else {
+            crossSectionName = 'สามเหลี่ยมหน้าจั่วหรือสี่เหลี่ยมคางหมู';
+            crossSectionFormula = 'แปรผันตามมุมเอียง';
+            crossSectionArea = baseArea * 1.15;
+          }
         } else {
-          crossSectionName = 'สามเหลี่ยมหน้าจั่วหรือสี่เหลี่ยมคางหมู';
-          crossSectionFormula = 'แปรผันตามมุมเอียง';
-          crossSectionArea = baseArea * 1.15;
+          // General / Isosceles triangle: 1/2 × ฐาน × สูง
+          const b = width; // ความยาวฐาน
+          const hBase = length; // ความสูงของฐานสามเหลี่ยม
+          baseArea = 0.5 * b * hBase;
+          // Side leg of isosceles triangle with base b and height hBase
+          const leg = Math.sqrt(Math.pow(b / 2, 2) + Math.pow(hBase, 2));
+          perimeter = b + 2 * leg;
+          lateralArea = perimeter * height;
+          totalSurfaceArea = 2 * baseArea + lateralArea;
+          volume = baseArea * height;
+
+          baseAreaFormula = '1/2 × ฐาน × สูงของฐาน';
+          baseAreaSubstitution = `1/2 × ${b} × ${hBase} = ${baseArea.toFixed(2)}`;
+          lateralAreaFormula = 'ความยาวรอบฐาน × สูงของปริซึม';
+          lateralAreaSubstitution = `(${b} + 2×${leg.toFixed(1)}) × ${height} = ${perimeter.toFixed(1)} × ${height} = ${lateralArea.toFixed(2)}`;
+          totalSurfaceFormula = '2(พื้นที่ฐาน) + ผิวข้าง';
+          totalSurfaceSubstitution = `2(${baseArea.toFixed(2)}) + ${lateralArea.toFixed(2)} = ${totalSurfaceArea.toFixed(2)}`;
+          volumeFormula = 'พื้นที่ฐาน × สูงของปริซึม';
+          volumeSubstitution = `${baseArea.toFixed(2)} × ${height} = ${volume.toFixed(2)}`;
+          baseSummaryText = `ฐานสามเหลี่ยม: ฐาน (b) = ${b} หน่วย, สูงของฐาน (h_ฐาน) = ${hBase} หน่วย, สูงของปริซึม (h_ปริซึม) = ${height} หน่วย`;
+
+          if (sliceType === 'horizontal') {
+            crossSectionName = 'สามเหลี่ยม (เท่ากับฐานทุกประการ)';
+            crossSectionFormula = '1/2 × ฐาน × สูง';
+            crossSectionArea = baseArea;
+          } else if (sliceType === 'vertical') {
+            crossSectionName = 'สี่เหลี่ยมผืนผ้า (ตั้งฉากกับฐาน)';
+            crossSectionFormula = 'ความยาวฐานตัด × สูง';
+            crossSectionArea = b * height;
+          } else {
+            crossSectionName = 'สามเหลี่ยมหน้าจั่วหรือสี่เหลี่ยมคางหมู';
+            crossSectionFormula = 'แปรผันตามมุมเอียง';
+            crossSectionArea = baseArea * 1.15;
+          }
         }
         break;
       }
       case 'trapezoidal_prism': {
-        const topW = width * 0.6;
-        const bottomW = width;
-        const baseH = length * 0.8;
-        baseArea = 0.5 * (topW + bottomW) * baseH;
-        const leg = Math.sqrt(Math.pow((bottomW - topW) / 2, 2) + Math.pow(baseH, 2));
-        perimeter = topW + bottomW + 2 * leg;
+        // Trapezoid base: 1/2 × (ผลบวกด้านคู่ขนาน) × สูงของฐาน
+        const a = trapTop; // ด้านคู่ขนานด้านบน
+        const b = trapBottom; // ด้านคู่ขนานด้านล่าง
+        const hBase = trapHeight; // ความสูงของรูปสี่เหลี่ยมคางหมู
+        baseArea = 0.5 * (a + b) * hBase;
+        const leg = Math.sqrt(Math.pow((b - a) / 2, 2) + Math.pow(hBase, 2));
+        perimeter = a + b + 2 * leg;
         lateralArea = perimeter * height;
         totalSurfaceArea = 2 * baseArea + lateralArea;
         volume = baseArea * height;
+
+        baseAreaFormula = '1/2 × (ผลบวกด้านคู่ขนาน) × สูงของฐาน';
+        baseAreaSubstitution = `1/2 × (${a} + ${b}) × ${hBase} = 1/2 × ${(a + b).toFixed(1)} × ${hBase} = ${baseArea.toFixed(2)}`;
+        lateralAreaFormula = 'ความยาวรอบฐาน × สูงของปริซึม';
+        lateralAreaSubstitution = `(${a} + ${b} + 2×${leg.toFixed(1)}) × ${height} = ${perimeter.toFixed(1)} × ${height} = ${lateralArea.toFixed(2)}`;
+        totalSurfaceFormula = '2(พื้นที่ฐาน) + ผิวข้าง';
+        totalSurfaceSubstitution = `2(${baseArea.toFixed(2)}) + ${lateralArea.toFixed(2)} = ${totalSurfaceArea.toFixed(2)}`;
+        volumeFormula = 'พื้นที่ฐาน × สูงของปริซึม';
+        volumeSubstitution = `${baseArea.toFixed(2)} × ${height} = ${volume.toFixed(2)}`;
+        baseSummaryText = `ฐานสี่เหลี่ยมคางหมู: ด้านคู่ขนาน a = ${a}, b = ${b} (ผลรวม = ${(a + b).toFixed(1)}), สูงตรงของคางหมู = ${hBase}, สูง/ยาวของปริซึม = ${height} หน่วย`;
 
         if (sliceType === 'horizontal') {
           crossSectionName = 'สี่เหลี่ยมคางหมู (เท่ากับฐานทุกประการ)';
@@ -129,7 +215,7 @@ export const Shape3DViewer: React.FC<Shape3DViewerProps> = ({ onShapeExplored })
         } else {
           crossSectionName = 'สี่เหลี่ยมผืนผ้า (ตัดตามแนวขวาง)';
           crossSectionFormula = 'กว้างรอยตัด × สูง';
-          crossSectionArea = width * height;
+          crossSectionArea = b * height;
         }
         break;
       }
@@ -140,6 +226,16 @@ export const Shape3DViewer: React.FC<Shape3DViewerProps> = ({ onShapeExplored })
         lateralArea = perimeter * height;
         totalSurfaceArea = 2 * baseArea + lateralArea;
         volume = baseArea * height;
+
+        baseAreaFormula = '(3√3 / 2) × ด้าน²';
+        baseAreaSubstitution = `(3√3 / 2) × ${a}² ≈ 2.598 × ${(a * a).toFixed(1)} = ${baseArea.toFixed(2)}`;
+        lateralAreaFormula = 'ความยาวรอบฐาน × สูงของปริซึม';
+        lateralAreaSubstitution = `(6 × ${a}) × ${height} = ${perimeter} × ${height} = ${lateralArea.toFixed(2)}`;
+        totalSurfaceFormula = '2(พื้นที่ฐาน) + ผิวข้าง';
+        totalSurfaceSubstitution = `2(${baseArea.toFixed(2)}) + ${lateralArea.toFixed(2)} = ${totalSurfaceArea.toFixed(2)}`;
+        volumeFormula = 'พื้นที่ฐาน × สูงของปริซึม';
+        volumeSubstitution = `${baseArea.toFixed(2)} × ${height} = ${volume.toFixed(2)}`;
+        baseSummaryText = `ฐานหกเหลี่ยมด้านเท่ามุมเท่า: ด้านยาวด้านละ ${a} หน่วย, สูงของปริซึม ${height} หน่วย`;
 
         if (sliceType === 'horizontal') {
           crossSectionName = 'หกเหลี่ยมด้านเท่ามุมเท่า';
@@ -158,6 +254,16 @@ export const Shape3DViewer: React.FC<Shape3DViewerProps> = ({ onShapeExplored })
         lateralArea = perimeter * height;
         totalSurfaceArea = 2 * baseArea + lateralArea;
         volume = baseArea * height;
+
+        baseAreaFormula = 'πr²';
+        baseAreaSubstitution = `π × ${radius}² ≈ 3.1416 × ${(radius * radius).toFixed(1)} = ${baseArea.toFixed(2)}`;
+        lateralAreaFormula = '2πrh (เส้นรอบวง × สูง)';
+        lateralAreaSubstitution = `2 × π × ${radius} × ${height} ≈ ${lateralArea.toFixed(2)}`;
+        totalSurfaceFormula = '2πr² + 2πrh = 2πr(r + h)';
+        totalSurfaceSubstitution = `2(${baseArea.toFixed(2)}) + ${lateralArea.toFixed(2)} = ${totalSurfaceArea.toFixed(2)}`;
+        volumeFormula = 'πr²h';
+        volumeSubstitution = `${baseArea.toFixed(2)} × ${height} = ${volume.toFixed(2)}`;
+        baseSummaryText = `ฐานทรงกระบอก: รัศมีฐาน (r) = ${radius} หน่วย, สูงตรง (h) = ${height} หน่วย`;
 
         if (sliceType === 'horizontal') {
           crossSectionName = 'วงกลม (ขนานกับฐาน มีขนาดเท่าฐาน)';
@@ -183,6 +289,16 @@ export const Shape3DViewer: React.FC<Shape3DViewerProps> = ({ onShapeExplored })
         lateralArea = outerLat + innerLat;
         totalSurfaceArea = 2 * baseArea + lateralArea;
         volume = baseArea * height;
+
+        baseAreaFormula = 'π(R² - r²) [พื้นที่วงแหวน]';
+        baseAreaSubstitution = `π(${radius}² - ${innerRadius}²) ≈ 3.1416 × ${(radius * radius - innerRadius * innerRadius).toFixed(2)} = ${baseArea.toFixed(2)}`;
+        lateralAreaFormula = '2πRh + 2πrh (ผิวข้างนอก + ผิวข้างใน)';
+        lateralAreaSubstitution = `2π(${radius} + ${innerRadius}) × ${height} ≈ ${lateralArea.toFixed(2)}`;
+        totalSurfaceFormula = '2(พื้นที่วงแหวน) + ผิวข้างนอก + ผิวข้างใน';
+        totalSurfaceSubstitution = `2(${baseArea.toFixed(2)}) + ${lateralArea.toFixed(2)} = ${totalSurfaceArea.toFixed(2)}`;
+        volumeFormula = 'π(R² - r²)h [ปริมาตรเนื้อท่อ]';
+        volumeSubstitution = `${baseArea.toFixed(2)} × ${height} = ${volume.toFixed(2)}`;
+        baseSummaryText = `ทรงกระบอกกลวง: รัศมีนอก (R) = ${radius}, รัศมีใน (r) = ${innerRadius}, สูงตรง (h) = ${height} หน่วย`;
 
         if (sliceType === 'horizontal') {
           crossSectionName = 'วงแหวน (Annulus)';
@@ -210,8 +326,17 @@ export const Shape3DViewer: React.FC<Shape3DViewerProps> = ({ onShapeExplored })
       crossSectionName,
       crossSectionFormula,
       crossSectionArea: Number(crossSectionArea.toFixed(2)),
+      baseAreaFormula,
+      baseAreaSubstitution,
+      lateralAreaFormula,
+      lateralAreaSubstitution,
+      totalSurfaceFormula,
+      totalSurfaceSubstitution,
+      volumeFormula,
+      volumeSubstitution,
+      baseSummaryText,
     };
-  }, [currentShape, width, length, height, radius, innerRadius, sliceType]);
+  }, [currentShape, width, length, height, radius, innerRadius, sliceType, trapTop, trapBottom, trapHeight, triangleType]);
 
   // Initialize Three.js Scene
   useEffect(() => {
@@ -331,7 +456,8 @@ export const Shape3DViewer: React.FC<Shape3DViewerProps> = ({ onShapeExplored })
         planeConstant = yOffset;
       } else if (sliceType === 'vertical') {
         planeNormal = new THREE.Vector3(-1, 0, 0);
-        planeConstant = (width * 0.5) * slicePos;
+        const halfSpan = currentShape === 'trapezoidal_prism' ? trapBottom * 0.5 : width * 0.5;
+        planeConstant = halfSpan * slicePos;
       } else {
         // Angled
         planeNormal = new THREE.Vector3(0.5, -0.866, 0).normalize();
@@ -363,36 +489,49 @@ export const Shape3DViewer: React.FC<Shape3DViewerProps> = ({ onShapeExplored })
         break;
       }
       case 'triangular_prism': {
-        // Triangular prism using ExtrudeGeometry
-        const s = width;
-        const triHeight = (Math.sqrt(3) / 2) * s;
-        const shape = new THREE.Shape();
-        shape.moveTo(-s / 2, -triHeight / 3);
-        shape.lineTo(s / 2, -triHeight / 3);
-        shape.lineTo(0, (2 * triHeight) / 3);
-        shape.closePath();
+        if (triangleType === 'equilateral') {
+          // Equilateral triangular prism
+          const s = width;
+          const triHeight = (Math.sqrt(3) / 2) * s;
+          const shape = new THREE.Shape();
+          shape.moveTo(-s / 2, -triHeight / 3);
+          shape.lineTo(s / 2, -triHeight / 3);
+          shape.lineTo(0, (2 * triHeight) / 3);
+          shape.closePath();
 
-        const extrudeSettings = {
-          depth: height,
-          bevelEnabled: false,
-        };
-        geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
-        // Center it
+          geometry = new THREE.ExtrudeGeometry(shape, {
+            depth: height,
+            bevelEnabled: false,
+          });
+        } else {
+          // General / Isosceles triangular prism with base width and height length
+          const b = width;
+          const th = length;
+          const shape = new THREE.Shape();
+          shape.moveTo(-b / 2, -th / 2);
+          shape.lineTo(b / 2, -th / 2);
+          shape.lineTo(0, th / 2);
+          shape.closePath();
+
+          geometry = new THREE.ExtrudeGeometry(shape, {
+            depth: height,
+            bevelEnabled: false,
+          });
+        }
         geometry.center();
-        // Rotate so height matches Y axis
         geometry.rotateX(Math.PI / 2);
         break;
       }
       case 'trapezoidal_prism': {
-        const topW = width * 0.6;
-        const botW = width;
-        const trapHeight = length * 0.8;
+        const topW = trapTop;
+        const botW = trapBottom;
+        const tHeight = trapHeight;
 
         const shape = new THREE.Shape();
-        shape.moveTo(-botW / 2, -trapHeight / 2);
-        shape.lineTo(botW / 2, -trapHeight / 2);
-        shape.lineTo(topW / 2, trapHeight / 2);
-        shape.lineTo(-topW / 2, trapHeight / 2);
+        shape.moveTo(-botW / 2, -tHeight / 2);
+        shape.lineTo(botW / 2, -tHeight / 2);
+        shape.lineTo(topW / 2, tHeight / 2);
+        shape.lineTo(-topW / 2, tHeight / 2);
         shape.closePath();
 
         geometry = new THREE.ExtrudeGeometry(shape, {
@@ -457,10 +596,9 @@ export const Shape3DViewer: React.FC<Shape3DViewerProps> = ({ onShapeExplored })
       if (currentShape.includes('cylinder')) {
         sliceGeom = new THREE.CircleGeometry(radius * 1.02, 48);
       } else {
-        sliceGeom = new THREE.PlaneGeometry(
-          Math.max(width, radius * 2) * 1.3,
-          Math.max(length, height) * 1.3
-        );
+        const maxSpan = Math.max(width, radius * 2, trapBottom, trapTop) * 1.35;
+        const maxDepth = Math.max(length, height, trapHeight) * 1.35;
+        sliceGeom = new THREE.PlaneGeometry(maxSpan, maxDepth);
       }
 
       const sliceMat = new THREE.MeshBasicMaterial({
@@ -477,7 +615,8 @@ export const Shape3DViewer: React.FC<Shape3DViewerProps> = ({ onShapeExplored })
         slicePlaneMesh.position.y = yOffset;
       } else if (sliceType === 'vertical') {
         slicePlaneMesh.rotation.y = Math.PI / 2;
-        slicePlaneMesh.position.x = (width * 0.5) * slicePos;
+        const halfSpan = currentShape === 'trapezoidal_prism' ? trapBottom * 0.5 : width * 0.5;
+        slicePlaneMesh.position.x = halfSpan * slicePos;
       } else {
         slicePlaneMesh.rotation.x = Math.PI / 3;
         slicePlaneMesh.position.y = yOffset * 0.8;
@@ -497,6 +636,10 @@ export const Shape3DViewer: React.FC<Shape3DViewerProps> = ({ onShapeExplored })
     sliceType,
     slicePos,
     wireframe,
+    trapTop,
+    trapBottom,
+    trapHeight,
+    triangleType,
   ]);
 
   // Mouse / Touch Drag handlers for 3D Orbiting
@@ -822,7 +965,171 @@ export const Shape3DViewer: React.FC<Shape3DViewerProps> = ({ onShapeExplored })
               <span>ปรับมิติและขนาดของรูปทรง</span>
             </div>
 
-            {currentShape.includes('cylinder') ? (
+            {currentShape === 'trapezoidal_prism' ? (
+              <>
+                <div className="bg-indigo-50/70 rounded-xl p-2.5 border border-indigo-100 text-xs text-indigo-900 space-y-1">
+                  <div className="font-semibold text-indigo-800 flex items-center gap-1.5">
+                    <span>สูตรฐานสี่เหลี่ยมคางหมู:</span>
+                    <code className="bg-white px-1.5 py-0.5 rounded text-[11px] font-mono text-indigo-700 border border-indigo-200">
+                      1/2 × (a + b) × h_ฐาน
+                    </code>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-xs font-medium text-slate-600 mb-1">
+                    <span>ด้านคู่ขนานด้านบน (a):</span>
+                    <span className="font-bold text-indigo-600">{trapTop} หน่วย</span>
+                  </div>
+                  <input
+                    id="slider-trap-top"
+                    type="range"
+                    min="2"
+                    max="8"
+                    step="0.5"
+                    value={trapTop}
+                    onChange={(e) => setTrapTop(parseFloat(e.target.value))}
+                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-xs font-medium text-slate-600 mb-1">
+                    <span>ด้านคู่ขนานด้านล่าง (b):</span>
+                    <span className="font-bold text-indigo-600">{trapBottom} หน่วย</span>
+                  </div>
+                  <input
+                    id="slider-trap-bottom"
+                    type="range"
+                    min="2"
+                    max="10"
+                    step="0.5"
+                    value={trapBottom}
+                    onChange={(e) => setTrapBottom(parseFloat(e.target.value))}
+                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-xs font-medium text-slate-600 mb-1">
+                    <span>ความสูงของฐานคางหมู (h_ฐาน):</span>
+                    <span className="font-bold text-indigo-600">{trapHeight} หน่วย</span>
+                  </div>
+                  <input
+                    id="slider-trap-height"
+                    type="range"
+                    min="2"
+                    max="8"
+                    step="0.5"
+                    value={trapHeight}
+                    onChange={(e) => setTrapHeight(parseFloat(e.target.value))}
+                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-xs font-medium text-slate-600 mb-1">
+                    <span>ความสูง/ยาวของปริซึม (h_ปริซึม):</span>
+                    <span className="font-bold text-indigo-600">{height} หน่วย</span>
+                  </div>
+                  <input
+                    id="slider-trap-prism-height"
+                    type="range"
+                    min="2"
+                    max="9"
+                    step="0.5"
+                    value={height}
+                    onChange={(e) => setHeight(parseFloat(e.target.value))}
+                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                  />
+                </div>
+              </>
+            ) : currentShape === 'triangular_prism' ? (
+              <>
+                <div>
+                  <label className="text-xs font-semibold text-slate-600 block mb-1.5">
+                    ลักษณะของฐานสามเหลี่ยม
+                  </label>
+                  <div className="grid grid-cols-2 gap-1.5 mb-3">
+                    <button
+                      id="btn-tri-general"
+                      onClick={() => setTriangleType('general')}
+                      className={`px-2 py-1.5 rounded-lg text-xs font-medium text-center transition-colors ${
+                        triangleType === 'general'
+                          ? 'bg-indigo-100 text-indigo-700 font-semibold border border-indigo-300'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      ทั่วไป (1/2 × ฐาน × สูง)
+                    </button>
+                    <button
+                      id="btn-tri-equilateral"
+                      onClick={() => setTriangleType('equilateral')}
+                      className={`px-2 py-1.5 rounded-lg text-xs font-medium text-center transition-colors ${
+                        triangleType === 'equilateral'
+                          ? 'bg-indigo-100 text-indigo-700 font-semibold border border-indigo-300'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      ด้านเท่า ((√3/4) × ด้าน²)
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-xs font-medium text-slate-600 mb-1">
+                    <span>{triangleType === 'equilateral' ? 'ความยาวด้าน (s):' : 'ความยาวฐาน (b):'}</span>
+                    <span className="font-bold text-indigo-600">{width} หน่วย</span>
+                  </div>
+                  <input
+                    id="slider-tri-width"
+                    type="range"
+                    min="2"
+                    max="9"
+                    step="0.5"
+                    value={width}
+                    onChange={(e) => setWidth(parseFloat(e.target.value))}
+                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                  />
+                </div>
+
+                {triangleType === 'general' && (
+                  <div>
+                    <div className="flex justify-between text-xs font-medium text-slate-600 mb-1">
+                      <span>ความสูงของฐานสามเหลี่ยม (h_ฐาน):</span>
+                      <span className="font-bold text-indigo-600">{length} หน่วย</span>
+                    </div>
+                    <input
+                      id="slider-tri-length"
+                      type="range"
+                      min="2"
+                      max="8"
+                      step="0.5"
+                      value={length}
+                      onChange={(e) => setLength(parseFloat(e.target.value))}
+                      className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                    />
+                  </div>
+                )}
+
+                <div>
+                  <div className="flex justify-between text-xs font-medium text-slate-600 mb-1">
+                    <span>ความสูงของปริซึม (h_ปริซึม):</span>
+                    <span className="font-bold text-indigo-600">{height} หน่วย</span>
+                  </div>
+                  <input
+                    id="slider-tri-height"
+                    type="range"
+                    min="2"
+                    max="9"
+                    step="0.5"
+                    value={height}
+                    onChange={(e) => setHeight(parseFloat(e.target.value))}
+                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                  />
+                </div>
+              </>
+            ) : currentShape.includes('cylinder') ? (
               <>
                 <div>
                   <div className="flex justify-between text-xs font-medium text-slate-600 mb-1">
@@ -867,6 +1174,42 @@ export const Shape3DViewer: React.FC<Shape3DViewerProps> = ({ onShapeExplored })
                   </div>
                   <input
                     id="slider-height-cyl"
+                    type="range"
+                    min="2"
+                    max="9"
+                    step="0.5"
+                    value={height}
+                    onChange={(e) => setHeight(parseFloat(e.target.value))}
+                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                  />
+                </div>
+              </>
+            ) : currentShape === 'hexagonal_prism' ? (
+              <>
+                <div>
+                  <div className="flex justify-between text-xs font-medium text-slate-600 mb-1">
+                    <span>ความยาวด้านของหกเหลี่ยม (a):</span>
+                    <span className="font-bold text-indigo-600">{radius} หน่วย</span>
+                  </div>
+                  <input
+                    id="slider-hex-a"
+                    type="range"
+                    min="2"
+                    max="6"
+                    step="0.5"
+                    value={radius}
+                    onChange={(e) => setRadius(parseFloat(e.target.value))}
+                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-xs font-medium text-slate-600 mb-1">
+                    <span>ความสูงของปริซึม (h):</span>
+                    <span className="font-bold text-indigo-600">{height} หน่วย</span>
+                  </div>
+                  <input
+                    id="slider-hex-height"
                     type="range"
                     min="2"
                     max="9"
@@ -936,78 +1279,108 @@ export const Shape3DViewer: React.FC<Shape3DViewerProps> = ({ onShapeExplored })
       </div>
 
       {/* Realtime Live Mathematical Formula & Value Dashboard */}
-      <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
-        <div className="flex items-center justify-between mb-4">
+      <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 space-y-4">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-indigo-600" />
-            <h3 className="font-bold text-slate-900 text-base">
-              ค่าการคำนวณแบบเรียลไทม์ (Live Calculations)
-            </h3>
+            <div>
+              <h3 className="font-bold text-slate-900 text-base">
+                ค่าการคำนวณแบบเรียลไทม์ (Live Calculations)
+              </h3>
+              <p className="text-xs text-slate-500">
+                ค่าคำนวณและสูตรจะอัปเดตทันทีตามขนาดมิติที่คุณปรับ
+              </p>
+            </div>
           </div>
           <button
             onClick={() => setShowFormulaInfo(!showFormulaInfo)}
-            className="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1"
+            className="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors border border-indigo-200/60"
           >
             <HelpCircle className="w-3.5 h-3.5" />
-            {showFormulaInfo ? 'ซ่อนสูตรละเอียด' : 'แสดงสูตรละเอียด'}
+            {showFormulaInfo ? 'ซ่อนวิธีแทนค่า' : 'แสดงวิธีแทนค่า'}
           </button>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Base Area Card */}
-          <div className="bg-slate-50 rounded-xl p-4 border border-slate-200/80">
-            <span className="text-xs font-medium text-slate-500 block">พื้นที่ฐาน (Base Area)</span>
+          <div className="bg-slate-50 rounded-xl p-4 border border-slate-200/80 hover:border-indigo-300 transition-colors">
+            <span className="text-xs font-semibold text-slate-600 block">พื้นที่ฐาน (Base Area)</span>
             <div className="text-2xl font-bold text-slate-900 mt-1">
               {calculations.baseArea}{' '}
               <span className="text-xs font-normal text-slate-500">ตร.หน่วย</span>
             </div>
+            <div className="text-[11px] text-indigo-600 font-medium mt-1">
+              สูตร: {calculations.baseAreaFormula}
+            </div>
             {showFormulaInfo && (
-              <div className="text-[11px] text-indigo-600 font-mono mt-1">
-                {currentShape.includes('cylinder') ? 'πr²' : 'กว้าง × ยาว / ฐาน × สูง'}
+              <div className="text-[10px] text-slate-600 font-mono mt-1.5 pt-1.5 border-t border-slate-200/60 bg-white/70 p-1.5 rounded">
+                = {calculations.baseAreaSubstitution}
               </div>
             )}
           </div>
 
           {/* Lateral Area Card */}
-          <div className="bg-slate-50 rounded-xl p-4 border border-slate-200/80">
-            <span className="text-xs font-medium text-slate-500 block">พื้นที่ผิวข้าง (Lateral Area)</span>
+          <div className="bg-slate-50 rounded-xl p-4 border border-slate-200/80 hover:border-indigo-300 transition-colors">
+            <span className="text-xs font-semibold text-slate-600 block">พื้นที่ผิวข้าง (Lateral Area)</span>
             <div className="text-2xl font-bold text-slate-900 mt-1">
               {calculations.lateralArea}{' '}
               <span className="text-xs font-normal text-slate-500">ตร.หน่วย</span>
             </div>
+            <div className="text-[11px] text-indigo-600 font-medium mt-1">
+              สูตร: {calculations.lateralAreaFormula}
+            </div>
             {showFormulaInfo && (
-              <div className="text-[11px] text-indigo-600 font-mono mt-1">
-                {currentShape.includes('cylinder') ? '2πrh' : 'ความยาวรอบฐาน × h'}
+              <div className="text-[10px] text-slate-600 font-mono mt-1.5 pt-1.5 border-t border-slate-200/60 bg-white/70 p-1.5 rounded">
+                = {calculations.lateralAreaSubstitution}
               </div>
             )}
           </div>
 
           {/* Total Surface Area Card */}
-          <div className="bg-indigo-50/60 rounded-xl p-4 border border-indigo-100">
-            <span className="text-xs font-medium text-indigo-600 block">พื้นที่ผิวทั้งหมด (Total Surface)</span>
+          <div className="bg-indigo-50/60 rounded-xl p-4 border border-indigo-100 hover:border-indigo-300 transition-colors">
+            <span className="text-xs font-semibold text-indigo-700 block">พื้นที่ผิวทั้งหมด (Total Surface)</span>
             <div className="text-2xl font-bold text-indigo-900 mt-1">
               {calculations.totalSurfaceArea}{' '}
               <span className="text-xs font-normal text-indigo-600">ตร.หน่วย</span>
             </div>
+            <div className="text-[11px] text-indigo-700 font-medium mt-1">
+              สูตร: {calculations.totalSurfaceFormula}
+            </div>
             {showFormulaInfo && (
-              <div className="text-[11px] text-indigo-700 font-mono mt-1">
-                2(ฐาน) + ผิวข้าง
+              <div className="text-[10px] text-indigo-800 font-mono mt-1.5 pt-1.5 border-t border-indigo-200/60 bg-white/70 p-1.5 rounded">
+                = {calculations.totalSurfaceSubstitution}
               </div>
             )}
           </div>
 
           {/* Volume Card */}
-          <div className="bg-emerald-50/60 rounded-xl p-4 border border-emerald-100">
-            <span className="text-xs font-medium text-emerald-600 block">ปริมาตร (Volume)</span>
+          <div className="bg-emerald-50/60 rounded-xl p-4 border border-emerald-100 hover:border-emerald-300 transition-colors">
+            <span className="text-xs font-semibold text-emerald-700 block">ปริมาตร (Volume)</span>
             <div className="text-2xl font-bold text-emerald-900 mt-1">
               {calculations.volume}{' '}
               <span className="text-xs font-normal text-emerald-600">ลบ.หน่วย</span>
             </div>
+            <div className="text-[11px] text-emerald-700 font-medium mt-1">
+              สูตร: {calculations.volumeFormula}
+            </div>
             {showFormulaInfo && (
-              <div className="text-[11px] text-emerald-700 font-mono mt-1">
-                พื้นที่ฐาน × ความสูง
+              <div className="text-[10px] text-emerald-800 font-mono mt-1.5 pt-1.5 border-t border-emerald-200/60 bg-white/70 p-1.5 rounded">
+                = {calculations.volumeSubstitution}
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Dimension & Geometry Overview Banner */}
+        <div className="bg-slate-50/90 rounded-xl p-3 border border-slate-200 text-xs text-slate-700 flex flex-col md:flex-row items-start md:items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Info className="w-4 h-4 text-indigo-600 shrink-0" />
+            <span className="font-semibold text-slate-900">
+              {calculations.baseSummaryText}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 text-slate-500 text-[11px]">
+            <span>ความยาวรอบฐาน (Perimeter) = <strong className="text-slate-800 font-mono">{calculations.perimeter}</strong> หน่วย</span>
           </div>
         </div>
       </div>
