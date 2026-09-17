@@ -81,6 +81,8 @@ export const Shape3DViewer: React.FC<Shape3DViewerProps> = ({ onShapeExplored })
     let volumeFormula = '';
     let volumeSubstitution = '';
     let baseSummaryText = '';
+    let perimeterBreakdown = '';
+    let legStr = '';
 
     switch (currentShape) {
       case 'rectangular_prism': {
@@ -90,9 +92,10 @@ export const Shape3DViewer: React.FC<Shape3DViewerProps> = ({ onShapeExplored })
         totalSurfaceArea = 2 * baseArea + lateralArea;
         volume = baseArea * height;
 
+        perimeterBreakdown = `2(${width} + ${length}) = ${perimeter}`;
         baseAreaFormula = 'กว้าง × ยาว';
         baseAreaSubstitution = `${width} × ${length} = ${baseArea.toFixed(2)}`;
-        lateralAreaFormula = 'ความยาวรอบฐาน × h';
+        lateralAreaFormula = 'ความยาวรอบฐาน × h = 2(กว้าง + ยาว) × h';
         lateralAreaSubstitution = `2(${width} + ${length}) × ${height} = ${perimeter} × ${height} = ${lateralArea.toFixed(2)}`;
         totalSurfaceFormula = '2(พื้นที่ฐาน) + ผิวข้าง';
         totalSurfaceSubstitution = `2(${baseArea.toFixed(2)}) + ${lateralArea.toFixed(2)} = ${totalSurfaceArea.toFixed(2)}`;
@@ -125,15 +128,20 @@ export const Shape3DViewer: React.FC<Shape3DViewerProps> = ({ onShapeExplored })
           totalSurfaceArea = 2 * baseArea + lateralArea;
           volume = baseArea * height;
 
+          const sStr = Number.isInteger(s) ? `${s}` : `${s.toFixed(1)}`;
+          const perimStr = Number.isInteger(perimeter) ? `${perimeter}` : `${perimeter.toFixed(1)}`;
+          perimeterBreakdown = `${sStr} + ${sStr} + ${sStr} = ${perimStr}`;
+          legStr = sStr;
+
           baseAreaFormula = '(√3 / 4) × ด้าน²';
-          baseAreaSubstitution = `(√3 / 4) × ${s}² ≈ (1.732 / 4) × ${(s * s).toFixed(1)} = ${baseArea.toFixed(2)}`;
-          lateralAreaFormula = 'ความยาวรอบฐาน × สูงของปริซึม';
-          lateralAreaSubstitution = `(3 × ${s}) × ${height} = ${perimeter} × ${height} = ${lateralArea.toFixed(2)}`;
+          baseAreaSubstitution = `(√3 / 4) × ${sStr}² ≈ (1.732 / 4) × ${(s * s).toFixed(1)} = ${baseArea.toFixed(2)}`;
+          lateralAreaFormula = 'ความยาวรอบฐาน × สูงของปริซึม = (ด้าน₁ + ด้าน₂ + ด้าน₃) × h';
+          lateralAreaSubstitution = `(${sStr} + ${sStr} + ${sStr}) × ${height} = ${perimStr} × ${height} = ${lateralArea.toFixed(2)}`;
           totalSurfaceFormula = '2(พื้นที่ฐาน) + ผิวข้าง';
           totalSurfaceSubstitution = `2(${baseArea.toFixed(2)}) + ${lateralArea.toFixed(2)} = ${totalSurfaceArea.toFixed(2)}`;
           volumeFormula = 'พื้นที่ฐาน × สูงของปริซึม';
           volumeSubstitution = `${baseArea.toFixed(2)} × ${height} = ${volume.toFixed(2)}`;
-          baseSummaryText = `ฐานสามเหลี่ยมด้านเท่า: ด้านยาวด้านละ ${s} หน่วย, สูงของปริซึม ${height} หน่วย`;
+          baseSummaryText = `ฐานสามเหลี่ยมด้านเท่า: ด้านทั้งสามยาว ${sStr}, ${sStr}, ${sStr} หน่วย (ความยาวรอบฐาน = ${sStr} + ${sStr} + ${sStr} = ${perimStr} หน่วย), สูงของปริซึม ${height} หน่วย`;
 
           if (sliceType === 'horizontal') {
             crossSectionName = 'สามเหลี่ยมด้านเท่า (เท่ากับฐานทุกประการ)';
@@ -155,20 +163,24 @@ export const Shape3DViewer: React.FC<Shape3DViewerProps> = ({ onShapeExplored })
           baseArea = 0.5 * b * hBase;
           // Side leg of isosceles triangle with base b and height hBase
           const leg = Math.sqrt(Math.pow(b / 2, 2) + Math.pow(hBase, 2));
+          legStr = Number.isInteger(leg) ? `${leg}` : `${leg.toFixed(2)}`;
           perimeter = b + 2 * leg;
+          const perimStr = Number.isInteger(perimeter) ? `${perimeter}` : `${perimeter.toFixed(2)}`;
           lateralArea = perimeter * height;
           totalSurfaceArea = 2 * baseArea + lateralArea;
           volume = baseArea * height;
 
+          perimeterBreakdown = `${b} + ${legStr} + ${legStr} = ${perimStr}`;
+
           baseAreaFormula = '1/2 × ฐาน × สูงของฐาน';
           baseAreaSubstitution = `1/2 × ${b} × ${hBase} = ${baseArea.toFixed(2)}`;
-          lateralAreaFormula = 'ความยาวรอบฐาน × สูงของปริซึม';
-          lateralAreaSubstitution = `(${b} + 2×${leg.toFixed(1)}) × ${height} = ${perimeter.toFixed(1)} × ${height} = ${lateralArea.toFixed(2)}`;
+          lateralAreaFormula = 'ความยาวรอบฐาน × สูงของปริซึม = (ด้าน₁ + ด้าน₂ + ด้าน₃) × h';
+          lateralAreaSubstitution = `(${b} + ${legStr} + ${legStr}) × ${height} = ${perimStr} × ${height} = ${lateralArea.toFixed(2)}`;
           totalSurfaceFormula = '2(พื้นที่ฐาน) + ผิวข้าง';
           totalSurfaceSubstitution = `2(${baseArea.toFixed(2)}) + ${lateralArea.toFixed(2)} = ${totalSurfaceArea.toFixed(2)}`;
           volumeFormula = 'พื้นที่ฐาน × สูงของปริซึม';
           volumeSubstitution = `${baseArea.toFixed(2)} × ${height} = ${volume.toFixed(2)}`;
-          baseSummaryText = `ฐานสามเหลี่ยม: ฐาน (b) = ${b} หน่วย, สูงของฐาน (h_ฐาน) = ${hBase} หน่วย, สูงของปริซึม (h_ปริซึม) = ${height} หน่วย`;
+          baseSummaryText = `ฐานสามเหลี่ยม: ด้านทั้งสามยาว ${b}, ${legStr}, ${legStr} หน่วย (ความยาวรอบฐาน = ${b} + ${legStr} + ${legStr} = ${perimStr} หน่วย), สูงของฐาน = ${hBase}, สูงของปริซึม = ${height} หน่วย`;
 
           if (sliceType === 'horizontal') {
             crossSectionName = 'สามเหลี่ยม (เท่ากับฐานทุกประการ)';
@@ -193,20 +205,24 @@ export const Shape3DViewer: React.FC<Shape3DViewerProps> = ({ onShapeExplored })
         const hBase = trapHeight; // ความสูงของรูปสี่เหลี่ยมคางหมู
         baseArea = 0.5 * (a + b) * hBase;
         const leg = Math.sqrt(Math.pow((b - a) / 2, 2) + Math.pow(hBase, 2));
+        const trapLegStr = Number.isInteger(leg) ? `${leg}` : `${leg.toFixed(2)}`;
         perimeter = a + b + 2 * leg;
+        const perimStr = Number.isInteger(perimeter) ? `${perimeter}` : `${perimeter.toFixed(2)}`;
         lateralArea = perimeter * height;
         totalSurfaceArea = 2 * baseArea + lateralArea;
         volume = baseArea * height;
 
+        perimeterBreakdown = `${a} + ${b} + ${trapLegStr} + ${trapLegStr} = ${perimStr}`;
+
         baseAreaFormula = '1/2 × (ผลบวกด้านคู่ขนาน) × สูงของฐาน';
         baseAreaSubstitution = `1/2 × (${a} + ${b}) × ${hBase} = 1/2 × ${(a + b).toFixed(1)} × ${hBase} = ${baseArea.toFixed(2)}`;
-        lateralAreaFormula = 'ความยาวรอบฐาน × สูงของปริซึม';
-        lateralAreaSubstitution = `(${a} + ${b} + 2×${leg.toFixed(1)}) × ${height} = ${perimeter.toFixed(1)} × ${height} = ${lateralArea.toFixed(2)}`;
+        lateralAreaFormula = 'ความยาวรอบฐาน × สูงของปริซึม = (ผลบวก 4 ด้าน) × h';
+        lateralAreaSubstitution = `(${a} + ${b} + ${trapLegStr} + ${trapLegStr}) × ${height} = ${perimStr} × ${height} = ${lateralArea.toFixed(2)}`;
         totalSurfaceFormula = '2(พื้นที่ฐาน) + ผิวข้าง';
         totalSurfaceSubstitution = `2(${baseArea.toFixed(2)}) + ${lateralArea.toFixed(2)} = ${totalSurfaceArea.toFixed(2)}`;
         volumeFormula = 'พื้นที่ฐาน × สูงของปริซึม';
         volumeSubstitution = `${baseArea.toFixed(2)} × ${height} = ${volume.toFixed(2)}`;
-        baseSummaryText = `ฐานสี่เหลี่ยมคางหมู: ด้านคู่ขนาน a = ${a}, b = ${b} (ผลรวม = ${(a + b).toFixed(1)}), สูงตรงของคางหมู = ${hBase}, สูง/ยาวของปริซึม = ${height} หน่วย`;
+        baseSummaryText = `ฐานสี่เหลี่ยมคางหมู: ด้านทั้งสี่ยาว ${a}, ${b}, ${trapLegStr}, ${trapLegStr} หน่วย (รอบฐาน = ${perimeterBreakdown} หน่วย), สูงตรงคางหมู = ${hBase}, สูงปริซึม = ${height} หน่วย`;
 
         if (sliceType === 'horizontal') {
           crossSectionName = 'สี่เหลี่ยมคางหมู (เท่ากับฐานทุกประการ)';
@@ -227,15 +243,16 @@ export const Shape3DViewer: React.FC<Shape3DViewerProps> = ({ onShapeExplored })
         totalSurfaceArea = 2 * baseArea + lateralArea;
         volume = baseArea * height;
 
+        perimeterBreakdown = `6 × ${a} = ${perimeter}`;
         baseAreaFormula = '(3√3 / 2) × ด้าน²';
         baseAreaSubstitution = `(3√3 / 2) × ${a}² ≈ 2.598 × ${(a * a).toFixed(1)} = ${baseArea.toFixed(2)}`;
-        lateralAreaFormula = 'ความยาวรอบฐาน × สูงของปริซึม';
+        lateralAreaFormula = 'ความยาวรอบฐาน × สูงของปริซึม = (6 × ด้าน) × h';
         lateralAreaSubstitution = `(6 × ${a}) × ${height} = ${perimeter} × ${height} = ${lateralArea.toFixed(2)}`;
         totalSurfaceFormula = '2(พื้นที่ฐาน) + ผิวข้าง';
         totalSurfaceSubstitution = `2(${baseArea.toFixed(2)}) + ${lateralArea.toFixed(2)} = ${totalSurfaceArea.toFixed(2)}`;
         volumeFormula = 'พื้นที่ฐาน × สูงของปริซึม';
         volumeSubstitution = `${baseArea.toFixed(2)} × ${height} = ${volume.toFixed(2)}`;
-        baseSummaryText = `ฐานหกเหลี่ยมด้านเท่ามุมเท่า: ด้านยาวด้านละ ${a} หน่วย, สูงของปริซึม ${height} หน่วย`;
+        baseSummaryText = `ฐานหกเหลี่ยมด้านเท่ามุมเท่า: ด้านยาวด้านละ ${a} หน่วย (รอบฐาน = 6 × ${a} = ${perimeter} หน่วย), สูงของปริซึม ${height} หน่วย`;
 
         if (sliceType === 'horizontal') {
           crossSectionName = 'หกเหลี่ยมด้านเท่ามุมเท่า';
@@ -255,6 +272,7 @@ export const Shape3DViewer: React.FC<Shape3DViewerProps> = ({ onShapeExplored })
         totalSurfaceArea = 2 * baseArea + lateralArea;
         volume = baseArea * height;
 
+        perimeterBreakdown = `2π(${radius}) ≈ ${perimeter.toFixed(2)}`;
         baseAreaFormula = 'πr²';
         baseAreaSubstitution = `π × ${radius}² ≈ 3.1416 × ${(radius * radius).toFixed(1)} = ${baseArea.toFixed(2)}`;
         lateralAreaFormula = '2πrh (เส้นรอบวง × สูง)';
@@ -290,6 +308,7 @@ export const Shape3DViewer: React.FC<Shape3DViewerProps> = ({ onShapeExplored })
         totalSurfaceArea = 2 * baseArea + lateralArea;
         volume = baseArea * height;
 
+        perimeterBreakdown = `นอก 2π(${radius}) + ใน 2π(${innerRadius})`;
         baseAreaFormula = 'π(R² - r²) [พื้นที่วงแหวน]';
         baseAreaSubstitution = `π(${radius}² - ${innerRadius}²) ≈ 3.1416 × ${(radius * radius - innerRadius * innerRadius).toFixed(2)} = ${baseArea.toFixed(2)}`;
         lateralAreaFormula = '2πRh + 2πrh (ผิวข้างนอก + ผิวข้างใน)';
@@ -320,6 +339,8 @@ export const Shape3DViewer: React.FC<Shape3DViewerProps> = ({ onShapeExplored })
     return {
       baseArea: Number(baseArea.toFixed(2)),
       perimeter: Number(perimeter.toFixed(2)),
+      perimeterBreakdown,
+      legStr,
       lateralArea: Number(lateralArea.toFixed(2)),
       totalSurfaceArea: Number(totalSurfaceArea.toFixed(2)),
       volume: Number(volume.toFixed(2)),
@@ -1050,7 +1071,7 @@ export const Shape3DViewer: React.FC<Shape3DViewerProps> = ({ onShapeExplored })
                   <label className="text-xs font-semibold text-slate-600 block mb-1.5">
                     ลักษณะของฐานสามเหลี่ยม
                   </label>
-                  <div className="grid grid-cols-2 gap-1.5 mb-3">
+                  <div className="grid grid-cols-2 gap-1.5 mb-2.5">
                     <button
                       id="btn-tri-general"
                       onClick={() => setTriangleType('general')}
@@ -1073,6 +1094,21 @@ export const Shape3DViewer: React.FC<Shape3DViewerProps> = ({ onShapeExplored })
                     >
                       ด้านเท่า ((√3/4) × ด้าน²)
                     </button>
+                  </div>
+
+                  {/* 3 sides breakdown pill */}
+                  <div className="bg-indigo-50/70 rounded-xl p-2.5 border border-indigo-100 text-xs text-indigo-900 space-y-1 mb-2.5">
+                    <div className="font-semibold text-indigo-800 flex items-center justify-between">
+                      <span>ความยาวรอบฐาน (3 ด้านบวกกัน):</span>
+                      <span className="font-mono text-indigo-700 bg-white px-1.5 py-0.5 rounded border border-indigo-200 text-[11px]">
+                        {triangleType === 'equilateral'
+                          ? `${width} + ${width} + ${width}`
+                          : `${width} + ${calculations.legStr} + ${calculations.legStr}`}
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-slate-600">
+                      รอบฐาน = <strong className="text-indigo-700 font-mono">{calculations.perimeterBreakdown}</strong> หน่วย
+                    </div>
                   </div>
                 </div>
 
@@ -1379,8 +1415,8 @@ export const Shape3DViewer: React.FC<Shape3DViewerProps> = ({ onShapeExplored })
               {calculations.baseSummaryText}
             </span>
           </div>
-          <div className="flex items-center gap-2 text-slate-500 text-[11px]">
-            <span>ความยาวรอบฐาน (Perimeter) = <strong className="text-slate-800 font-mono">{calculations.perimeter}</strong> หน่วย</span>
+          <div className="flex items-center gap-2 text-slate-500 text-[11px] shrink-0">
+            <span>ความยาวรอบฐาน (Perimeter) = <strong className="text-slate-800 font-mono">{calculations.perimeterBreakdown || `${calculations.perimeter}`}</strong> หน่วย</span>
           </div>
         </div>
       </div>
